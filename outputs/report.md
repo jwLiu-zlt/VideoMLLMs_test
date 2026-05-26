@@ -2,30 +2,30 @@
 
 ## 实验配置
 
-- 视频路径: `synthetic_demo`
-- clip_seconds: `1.0`
+- 视频路径: `data/1.mp4`
+- clip_seconds: `0.5`
 - frames_per_clip: `8`
 - embedding_backend: `simple`
-- event_start/event_end: `20.0` / `25.0`
+- event_start/event_end: `4.0` / `5.5`
 
 ## 方法参数
 
-- Prototype RDT-Gate: `{'warmup_clips': 5, 'alpha': 0.9, 'tau_silence': 0.2, 'tau_suspicious': 0.5, 'tau_change_low': 0.2, 'tau_change_high': 0.5, 'init_var_threshold': 0.35, 'init_change_threshold': 0.45, 'max_wait': 3}`
-- Adjacent Baseline: `{'adj_tau_silence': 0.2, 'adj_tau_suspicious': 0.45}`
+- Prototype RDT-Gate: `{'warmup_clips': 4, 'alpha': 0.9, 'tau_silence': 0.03, 'tau_suspicious': 0.08, 'tau_change_low': 0.01, 'tau_change_high': 0.013, 'init_var_threshold': 0.1, 'init_change_threshold': 0.1, 'max_wait': 99}`
+- Adjacent Baseline: `{'adj_tau_silence': 0.01, 'adj_tau_suspicious': 0.013}`
 
 ## 信号数量统计
 
 | 方法 | SILENCE | WAIT | SUSPICIOUS |
 |---|---:|---:|---:|
-| prototype | 19 | 5 | 6 |
-| adjacent | 27 | 1 | 2 |
+| prototype | 18 | 5 | 3 |
+| adjacent | 21 | 2 | 3 |
 
 ## 指标对比
 
 | 方法 | false suspicious rate | event suspicious rate | slow path trigger rate |
 |---|---:|---:|---:|
-| prototype | 0.0000 | 1.0000 | 0.2000 |
-| adjacent | 0.0000 | 0.2000 | 0.0667 |
+| prototype | 0.0000 | 1.0000 | 0.1154 |
+| adjacent | 0.0000 | 1.0000 | 0.1154 |
 
 ## 图表解释
 

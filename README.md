@@ -15,30 +15,47 @@ pip install -r requirements.txt
 
 默认 `simple` embedding 使用 OpenCV 手工特征，不需要下载大模型。
 
-## 运行真实视频
+## 默认运行
 
 ```bash
-python main.py \
-  --video_path data/demo.mp4 \
-  --output_dir outputs \
-  --clip_seconds 1.0 \
-  --frames_per_clip 8 \
-  --embedding_backend simple
+python main.py
 ```
 
-如果有事件时间标注：
+当前默认配置针对 `data/1.mp4`，事件标注为 `4.0s - 5.5s`，结果写入 `outputs/`。
+
+默认参数：
 
 ```bash
-python main.py \
-  --video_path data/demo.mp4 \
-  --event_start 12.0 \
-  --event_end 16.0
+--video_path data/1.mp4
+--output_dir outputs
+--clip_seconds 0.5
+--frames_per_clip 8
+--warmup_clips 4
+--tau_silence 0.03
+--tau_suspicious 0.08
+--tau_change_low 0.01
+--tau_change_high 0.013
+--adj_tau_silence 0.01
+--adj_tau_suspicious 0.013
+--init_var_threshold 0.10
+--init_change_threshold 0.10
+--max_wait 99
+--event_start 4.0
+--event_end 5.5
 ```
+
+## 运行其它真实视频
+
+```bash
+python main.py --video_path data/2.mp4 --output_dir outputs_2mp4
+```
+
+如果事件时间不同，需要同步传入新的标注和必要阈值。
 
 ## 运行 Synthetic Demo
 
 ```bash
-python main.py --use_synthetic_demo --output_dir outputs
+python main.py --use_synthetic_demo --output_dir outputs_synthetic
 ```
 
 synthetic demo 会生成 30 个 clip embedding，其中 20-24 秒默认是异常事件区间。
