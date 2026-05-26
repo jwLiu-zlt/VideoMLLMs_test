@@ -1,0 +1,22 @@
+{
+  "prototype": {
+    "signal_counts": {
+      "SILENCE": 18,
+      "WAIT": 5,
+      "SUSPICIOUS": 3
+    },
+    "false_suspicious_rate": 0.0,
+    "event_suspicious_rate": 1.0,
+    "slow_path_trigger_rate": 0.11538461538461539
+  },
+  "adjacent": {
+    "signal_counts": {
+      "SILENCE": 21,
+      "WAIT": 2,
+      "SUSPICIOUS": 3
+    },
+    "false_suspicious_rate": 0.0,
+    "event_suspicious_rate": 1.0,
+    "slow_path_trigger_rate": 0.11538461538461539
+  }
+}
