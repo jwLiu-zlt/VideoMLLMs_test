@@ -9,6 +9,7 @@ from typing import Any
 
 from rdt_gate.adjacent_gate import run_adjacent_gate
 from rdt_gate.embedding import extract_embeddings, make_synthetic_embeddings
+from rdt_gate.everos_memory import make_everos_session_id, sync_experiment_run
 from rdt_gate.evaluation import compute_metrics, make_report
 from rdt_gate.prototype_gate import PrototypeGate
 from rdt_gate.video_utils import load_video_clips
@@ -36,6 +37,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--event_start", type=float, default=4.0)
     parser.add_argument("--event_end", type=float, default=5.5)
     parser.add_argument("--use_synthetic_demo", action="store_true")
+    parser.add_argument("--everos_enable", action="store_true", help="Store this run in EverOS memory.")
+    parser.add_argument(
+        "--everos_user_id",
+        default=os.environ.get("EVEROS_USER_ID", "damo_0526_user"),
+        help="EverOS user_id owner for experiment memories.",
+    )
+    parser.add_argument("--everos_session_id", default=None, help="EverOS session_id for this experiment run.")
+    parser.add_argument(
+        "--everos_search",
+        default=None,
+        help="Optional query to retrieve prior EverOS context before saving this run.",
+    )
+    parser.add_argument("--everos_top_k", type=int, default=5, help="Top K memories for --everos_search.")
+    parser.add_argument("--everos_no_flush", action="store_true", help="Do not flush EverOS agent memory after save.")
     return parser.parse_args()
 
 
@@ -110,6 +125,10 @@ def main() -> None:
     with open(os.path.join(args.output_dir, "report.md"), "w", encoding="utf-8") as f:
         f.write(report)
 
+    if args.everos_enable:
+        everos_status = _sync_everos(args, video_label, prototype_params, adjacent_params, metrics, report)
+        _write_json(os.path.join(args.output_dir, "everos_status.json"), everos_status)
+
     print(f"Processed {len(clips)} clips. Results saved to: {args.output_dir}")
 
 
@@ -153,6 +172,47 @@ def _write_adjacent_csv(path: str, rows) -> None:
 def _write_json(path: str, data: Any) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def _sync_everos(
+    args: argparse.Namespace,
+    video_label: str,
+    prototype_params: dict[str, Any],
+    adjacent_params: dict[str, Any],
+    metrics: dict[str, dict[str, Any]],
+    report: str,
+) -> dict[str, Any]:
+    session_id = args.everos_session_id or make_everos_session_id(video_label, args.output_dir)
+    try:
+        status = sync_experiment_run(
+            user_id=args.everos_user_id,
+            session_id=session_id,
+            video_label=video_label,
+            output_dir=args.output_dir,
+            clip_seconds=args.clip_seconds,
+            frames_per_clip=args.frames_per_clip,
+            embedding_backend=args.embedding_backend,
+            prototype_params=prototype_params,
+            adjacent_params=adjacent_params,
+            metrics=metrics,
+            report=report,
+            search_query=args.everos_search,
+            search_top_k=args.everos_top_k,
+            flush=not args.everos_no_flush,
+        )
+        print(f"EverOS memory saved for user_id={args.everos_user_id}, session_id={session_id}.")
+        return status
+    except Exception as exc:
+        message = f"EverOS sync failed: {exc}"
+        print(message)
+        return {
+            "enabled": True,
+            "user_id": args.everos_user_id,
+            "session_id": session_id,
+            "saved": False,
+            "flushed": False,
+            "warnings": [message],
+        }
 
 
 def _fmt(value: float | None) -> str:

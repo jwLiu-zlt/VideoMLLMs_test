@@ -1,0 +1,10 @@
+frame_id,start_time,end_time,change,deviation,decision,prototype_ready,is_deviated,deviation_level,trigger_slow_path,reason
+0,0.0000,1.0000,,,WAIT,False,False,not_ready,False,prototype_not_ready;change_not_available
+1,1.0000,2.0000,0.006639,,WAIT,False,False,not_ready,False,prototype_not_ready;change_below_tau_low
+2,2.0000,3.0000,0.003983,,WAIT,False,False,not_ready,False,prototype_not_ready;change_below_tau_low
+3,3.0000,4.0000,0.005655,0.003811,WAIT,True,False,normal,False,deviation_below_tau_silence;change_below_tau_low
+4,4.0000,5.0000,0.005164,0.004449,SILENCE,True,False,normal,False,deviation_below_tau_silence;change_below_tau_low
+5,5.0000,6.0000,0.005928,0.005600,SILENCE,True,False,normal,False,deviation_below_tau_silence;change_below_tau_low
+6,6.0000,7.0000,0.005848,0.005146,SILENCE,True,False,normal,False,deviation_below_tau_silence;change_below_tau_low
+7,7.0000,8.0000,0.011377,0.008787,WAIT,True,False,normal,False,deviation_below_tau_silence;change_between_thresholds
+8,8.0000,9.0000,0.002764,0.009027,SILENCE,True,False,normal,False,deviation_below_tau_silence;change_below_tau_low

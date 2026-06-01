@@ -2,3 +2,7 @@ numpy
 opencv-python
 matplotlib
 pandas
+Pillow
+torch
+decord
+everos; python_version >= "3.9"

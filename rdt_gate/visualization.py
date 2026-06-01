@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
+import tempfile
 from typing import Dict
 
-os.environ.setdefault("MPLCONFIGDIR", "/private/tmp/rdt_gate_matplotlib")
-os.environ.setdefault("XDG_CACHE_HOME", "/private/tmp/rdt_gate_cache")
-os.environ.setdefault("FONTCONFIG_CACHE", "/private/tmp/rdt_gate_fontconfig")
+_cache_root = tempfile.gettempdir()
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(_cache_root, "rdt_gate_matplotlib"))
+os.environ.setdefault("XDG_CACHE_HOME", os.path.join(_cache_root, "rdt_gate_cache"))
+os.environ.setdefault("FONTCONFIG_CACHE", os.path.join(_cache_root, "rdt_gate_fontconfig"))
 for cache_dir in (
     os.environ["MPLCONFIGDIR"],
     os.environ["XDG_CACHE_HOME"],
