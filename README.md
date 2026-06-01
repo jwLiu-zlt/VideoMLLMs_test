@@ -1,4 +1,4 @@
-# Fast-Slow RDT-Gate Demo
+# RDT-Gate Demo
 
 这是一个 proof-of-concept 项目，用来对比两种流式视频触发策略：
 
