@@ -19,7 +19,11 @@ from rdt_gate.visualization import plot_all
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fast-Slow RDT-Gate vs adjacent similarity demo.")
     parser.add_argument("--video_path", default="data/1.mp4", help="Input video path.")
-    parser.add_argument("--output_dir", default="outputs", help="Directory for CSV, plots, and report.")
+    parser.add_argument(
+        "--output_dir",
+        default=None,
+        help="Directory for CSV, plots, and report. Defaults to outputs/<video_name>/.",
+    )
     parser.add_argument("--clip_seconds", type=float, default=0.5)
     parser.add_argument("--frames_per_clip", type=int, default=8)
     parser.add_argument("--embedding_backend", default="simple", choices=["simple", "clip"])
@@ -34,8 +38,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--init_var_threshold", type=float, default=0.10)
     parser.add_argument("--init_change_threshold", type=float, default=0.10)
     parser.add_argument("--max_wait", type=int, default=99)
-    parser.add_argument("--event_start", type=float, default=4.0)
-    parser.add_argument("--event_end", type=float, default=5.5)
+    parser.add_argument("--event_start", type=float, default=None)
+    parser.add_argument("--event_end", type=float, default=None)
+    parser.add_argument(
+        "--event_config",
+        default="event_annotations.json",
+        help="JSON file mapping each video to its event_start/event_end annotation.",
+    )
     parser.add_argument("--use_synthetic_demo", action="store_true")
     parser.add_argument("--everos_enable", action="store_true", help="Store this run in EverOS memory.")
     parser.add_argument(
@@ -56,6 +65,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    _resolve_event_annotation(args)
+    _resolve_output_dir(args)
     os.makedirs(args.output_dir, exist_ok=True)
 
     if args.use_synthetic_demo:
@@ -130,6 +141,89 @@ def main() -> None:
         _write_json(os.path.join(args.output_dir, "everos_status.json"), everos_status)
 
     print(f"Processed {len(clips)} clips. Results saved to: {args.output_dir}")
+
+
+def _resolve_output_dir(args: argparse.Namespace) -> None:
+    if args.output_dir:
+        return
+    if args.use_synthetic_demo:
+        name = "synthetic_demo"
+    else:
+        name = _output_name_for_video(args.video_path)
+    args.output_dir = os.path.join("outputs", name)
+
+
+def _output_name_for_video(video_path: str) -> str:
+    base = os.path.basename(video_path)
+    stem, ext = os.path.splitext(base)
+    raw_name = f"{stem}{ext.lstrip('.')}" if ext else stem
+    parts = []
+    for char in raw_name.lower():
+        parts.append(char if char.isalnum() else "_")
+    name = "_".join(part for part in "".join(parts).split("_") if part)
+    return name or "video"
+
+
+def _resolve_event_annotation(args: argparse.Namespace) -> None:
+    if args.event_start is not None or args.event_end is not None:
+        if args.event_start is None or args.event_end is None:
+            raise SystemExit("Please provide both --event_start and --event_end, or neither.")
+        if args.event_end <= args.event_start:
+            raise SystemExit("--event_end must be greater than --event_start.")
+        return
+
+    if args.use_synthetic_demo:
+        args.event_start = 20.0
+        args.event_end = 25.0
+        return
+
+    annotation = _load_video_event_annotation(args.event_config, args.video_path)
+    if annotation is None:
+        print(
+            "No event annotation found for this video. "
+            "Event metrics will be null; pass --event_start/--event_end or update "
+            f"{args.event_config} to evaluate event recall."
+        )
+        return
+
+    args.event_start = annotation["event_start"]
+    args.event_end = annotation["event_end"]
+    print(
+        f"Loaded event annotation for {args.video_path}: "
+        f"{args.event_start:.4f}s - {args.event_end:.4f}s"
+    )
+
+
+def _load_video_event_annotation(config_path: str, video_path: str) -> dict[str, float] | None:
+    if not config_path or not os.path.exists(config_path):
+        return None
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        annotations = json.load(f)
+
+    candidates = [
+        video_path,
+        os.path.normpath(video_path),
+        os.path.basename(video_path),
+        os.path.splitext(os.path.basename(video_path))[0],
+        os.path.abspath(video_path),
+    ]
+    for key in candidates:
+        if key in annotations:
+            return _parse_event_annotation(annotations[key], key)
+    return None
+
+
+def _parse_event_annotation(value: Any, key: str) -> dict[str, float]:
+    if not isinstance(value, dict):
+        raise SystemExit(f"Invalid event annotation for {key}: expected an object.")
+    if "event_start" not in value or "event_end" not in value:
+        raise SystemExit(f"Invalid event annotation for {key}: missing event_start/event_end.")
+    event_start = float(value["event_start"])
+    event_end = float(value["event_end"])
+    if event_end <= event_start:
+        raise SystemExit(f"Invalid event annotation for {key}: event_end must be greater than event_start.")
+    return {"event_start": event_start, "event_end": event_end}
 
 
 def _write_prototype_csv(path: str, rows) -> None:

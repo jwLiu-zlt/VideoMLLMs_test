@@ -45,6 +45,10 @@ def plot_all(
     _plot_signal_counts(output_dir, metrics)
     if event_start is not None and event_end is not None:
         _plot_metrics(output_dir, metrics)
+    else:
+        stale_metrics_plot = os.path.join(output_dir, "metrics_comparison.png")
+        if os.path.exists(stale_metrics_plot):
+            os.remove(stale_metrics_plot)
 
 
 def _event_span(event_start, event_end) -> None:
