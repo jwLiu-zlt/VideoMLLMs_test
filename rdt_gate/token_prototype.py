@@ -7,7 +7,10 @@ import numpy as np
 import torch
 
 from .embedding import l2_normalize
+from .decision_schema import GateDecision
+from .prototype_bank_gate import PrototypeBankGate
 from .prototype_gate import PrototypeGate, PrototypeResult, Signal
+from .token_aggregator import AggregatedTokenItem, aggregate_frame_tokens, embeddings_from_items
 
 
 @dataclass
@@ -25,6 +28,16 @@ class FrameTokenPrototype:
     prototype_vector: np.ndarray | None
     results: List[PrototypeResult]
     judgments: List[DeviationJudgment]
+
+
+@dataclass
+class FrameTokenPrototypeBank:
+    """Prototype-bank result built from LiveStar-style frame tokens."""
+
+    items: List[AggregatedTokenItem]
+    frame_embeddings: np.ndarray
+    prototype_vectors: np.ndarray | None
+    results: List[GateDecision]
 
 
 @dataclass
@@ -111,6 +124,63 @@ def build_frame_token_prototype(
         prototype_vector=prototype_vector,
         results=results,
         judgments=judgments,
+    )
+
+
+def build_frame_token_prototype_bank(
+    frame_tokens: Sequence[torch.Tensor],
+    frame_times: Sequence[float],
+    sample_fps: float,
+    pool_mode: str = "tile_mean",
+    exclude_cls: bool = True,
+    clip_window: int = 1,
+    warmup_frames: int = 4,
+    max_prototypes: int = 4,
+    alpha: float = 0.9,
+    init_cluster_threshold: float = 0.08,
+    tau_silence: float | None = None,
+    tau_suspicious: float | None = None,
+    tau_change_low: float | None = None,
+    tau_change_high: float | None = None,
+    max_wait: int = 5,
+    cooldown_items: int = 3,
+) -> FrameTokenPrototypeBank:
+    """Build a multi-prototype routine memory from visual tokens.
+
+    This is the optimized path for the LiveStar fusion design. It keeps the
+    existing single-prototype implementation available while providing a more
+    robust prototype bank with adaptive thresholds and conservative updates.
+    """
+
+    items = aggregate_frame_tokens(
+        frame_tokens=frame_tokens,
+        frame_times=frame_times,
+        sample_fps=sample_fps,
+        pool_mode=pool_mode,
+        clip_window=clip_window,
+        exclude_cls=exclude_cls,
+    )
+    embeddings = embeddings_from_items(items)
+
+    gate = PrototypeBankGate(
+        warmup_items=warmup_frames,
+        max_prototypes=max_prototypes,
+        alpha=alpha,
+        init_cluster_threshold=init_cluster_threshold,
+        tau_silence=tau_silence,
+        tau_suspicious=tau_suspicious,
+        tau_change_low=tau_change_low,
+        tau_change_high=tau_change_high,
+        max_wait=max_wait,
+        cooldown_items=cooldown_items,
+    )
+    results = gate.run(items)
+
+    return FrameTokenPrototypeBank(
+        items=items,
+        frame_embeddings=embeddings,
+        prototype_vectors=gate.prototype_vectors,
+        results=results,
     )
 
 

@@ -115,16 +115,13 @@ def sample_video_frames(
     video_path: str,
     sample_fps: float = 1.0,
 ) -> tuple[List[Image.Image], List[float]]:
-    try:
-        from decord import VideoReader, cpu
-    except ImportError as exc:
-        raise ImportError(
-            "LiveStar-style video loading requires decord. Install it with: "
-            "python -m pip install decord"
-        ) from exc
-
     if sample_fps <= 0:
         raise ValueError("sample_fps must be positive.")
+
+    try:
+        from decord import VideoReader, cpu
+    except ImportError:
+        return _sample_video_frames_cv2(video_path, sample_fps)
 
     video_reader = VideoReader(video_path, ctx=cpu(0), num_threads=1)
     frame_count = len(video_reader)
@@ -138,6 +135,51 @@ def sample_video_frames(
 
     frames = [Image.fromarray(batch[i]).convert("RGB") for i in range(batch.shape[0])]
     frame_times = [frame_idx / fps for frame_idx in frame_indices]
+    if not frames:
+        raise ValueError(f"No frames sampled from video: {video_path}")
+    return frames, frame_times
+
+
+def _sample_video_frames_cv2(video_path: str, sample_fps: float) -> tuple[List[Image.Image], List[float]]:
+    """OpenCV fallback for environments without decord.
+
+    decord is preferred because it matches LiveStar, but OpenCV keeps the demo
+    runnable in lightweight environments.
+    """
+
+    try:
+        import cv2
+    except ImportError as exc:
+        raise ImportError(
+            "Video loading requires decord or opencv-python. Install one of them to read videos."
+        ) from exc
+
+    capture = cv2.VideoCapture(video_path)
+    if not capture.isOpened():
+        raise ValueError(f"Cannot open video: {video_path}")
+
+    fps = float(capture.get(cv2.CAP_PROP_FPS))
+    frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+    if fps <= 0 or frame_count <= 0:
+        capture.release()
+        raise ValueError(f"Cannot read valid FPS/frame count from video: {video_path}")
+
+    interval = max(1, int(fps / sample_fps))
+    frames: List[Image.Image] = []
+    frame_times: List[float] = []
+
+    frame_idx = 0
+    while True:
+        ok, frame = capture.read()
+        if not ok:
+            break
+        if frame_idx % interval == 0:
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frames.append(Image.fromarray(rgb).convert("RGB"))
+            frame_times.append(frame_idx / fps)
+        frame_idx += 1
+
+    capture.release()
     if not frames:
         raise ValueError(f"No frames sampled from video: {video_path}")
     return frames, frame_times

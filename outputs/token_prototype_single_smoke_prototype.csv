@@ -1,0 +1,14 @@
+frame_id,start_time,end_time,change,deviation,matched_prototype_id,decision,prototype_ready,is_deviated,deviation_level,trigger_slow_path,reason
+0,0.0000,1.0000,,,,WAIT,False,False,not_ready,False,prototype_not_ready;change_not_available
+1,1.0000,2.0000,0.002793,0.000699,,WAIT,True,False,normal,False,deviation_below_tau_silence;change_below_tau_low
+2,2.0000,3.0000,0.014689,0.013941,,SUSPICIOUS,True,False,normal,True,deviation_below_tau_silence;change_over_tau_high
+3,3.0000,4.0000,0.036149,0.037560,,SUSPICIOUS,True,False,borderline,True,deviation_between_thresholds;change_over_tau_high
+4,4.0000,5.0000,0.041112,0.077505,,SUSPICIOUS,True,False,borderline,True,deviation_between_thresholds;change_over_tau_high
+5,5.0000,6.0000,0.021068,0.072443,,SUSPICIOUS,True,False,borderline,True,deviation_between_thresholds;change_over_tau_high
+6,6.0000,7.0000,0.032938,0.058802,,SUSPICIOUS,True,False,borderline,True,deviation_between_thresholds;change_over_tau_high
+7,7.0000,8.0000,0.020031,0.034781,,SUSPICIOUS,True,False,borderline,True,deviation_between_thresholds;change_over_tau_high
+8,8.0000,9.0000,0.012785,0.028177,,WAIT,True,False,normal,False,deviation_below_tau_silence;change_between_thresholds
+9,9.0000,10.0000,0.012502,0.030693,,WAIT,True,False,borderline,False,deviation_between_thresholds;change_between_thresholds
+10,10.0000,11.0000,0.010836,0.041719,,WAIT,True,False,borderline,False,deviation_between_thresholds;change_between_thresholds
+11,11.0000,12.0000,0.020892,0.049000,,SUSPICIOUS,True,False,borderline,True,deviation_between_thresholds;change_over_tau_high
+12,12.0000,13.0000,0.014471,0.043224,,SUSPICIOUS,True,False,borderline,True,deviation_between_thresholds;change_over_tau_high

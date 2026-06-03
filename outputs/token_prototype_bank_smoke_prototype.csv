@@ -1,0 +1,14 @@
+frame_id,start_time,end_time,change,deviation,matched_prototype_id,decision,prototype_ready,is_deviated,deviation_level,trigger_slow_path,reason
+0,0.0000,1.0000,,,,WAIT,False,False,not_ready,False,prototype_not_ready
+1,1.0000,2.0000,0.003109,0.000778,0,WAIT,True,False,warmup_ready,False,prototype_initialized
+2,2.0000,3.0000,0.016107,0.015066,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+3,3.0000,4.0000,0.019649,0.024571,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+4,4.0000,5.0000,0.022321,0.057057,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+5,5.0000,6.0000,0.037533,0.086704,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+6,6.0000,7.0000,0.033965,0.051908,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+7,7.0000,8.0000,0.028877,0.024077,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+8,8.0000,9.0000,0.013412,0.021044,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+9,9.0000,10.0000,0.010643,0.024223,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+10,10.0000,11.0000,0.011065,0.028912,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+11,11.0000,12.0000,0.010896,0.035474,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high
+12,12.0000,13.0000,0.017137,0.034414,0,SUSPICIOUS,True,True,deviated,True,deviation_over_tau_suspicious;change_over_tau_high

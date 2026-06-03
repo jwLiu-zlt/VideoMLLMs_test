@@ -128,8 +128,44 @@ python test/damo1.py \
 这会额外保存：
 
 - `frame_embeddings`: 每帧 token 池化后的归一化向量。
-- `prototype_vector`: warmup 后得到并随稳定帧 EMA 更新的 routine 原型向量。
+- `prototype_vector`: 默认是多原型 bank，shape 为 `[num_prototypes, dim]`；如果使用 `--prototype_gate single`，则为旧版单原型向量。
 - `outputs/token_prototype_demo_prototype.csv`: 每帧的 change、deviation、decision、is_deviated、deviation_level、trigger_slow_path 和 reason。
+
+默认 `--prototype_gate bank` 会启用优化后的 PrototypeBankGate：
+
+- warmup 后自动估计 silence / suspicious / change 阈值。
+- 维护多个 routine prototype，避免单中心原型无法覆盖多种正常状态。
+- 只用高置信 `SILENCE` 样本保守更新，`SUSPICIOUS` 后进入 cooldown，避免异常污染 routine memory。
+- CSV 额外包含 `matched_prototype_id`，方便解释当前片段匹配到哪个常规模式。
+
+可选参数示例：
+
+```bash
+python test/damo1.py \
+  --video_path data/1.mp4 \
+  --backend simple \
+  --sample_fps 1 \
+  --prototype_enable \
+  --prototype_gate bank \
+  --prototype_pool tile_mean \
+  --clip_window 2 \
+  --warmup_frames 4 \
+  --max_prototypes 4 \
+  --save_path outputs/token_prototype_bank_demo.pt
+```
+
+如果需要回到旧版单原型逻辑：
+
+```bash
+python test/damo1.py \
+  --video_path data/1.mp4 \
+  --backend simple \
+  --sample_fps 1 \
+  --prototype_enable \
+  --prototype_gate single \
+  --prototype_pool mean \
+  --save_path outputs/token_prototype_single_demo.pt
+```
 
 ## EverOS 记忆集成
 
