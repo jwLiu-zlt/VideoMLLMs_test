@@ -92,7 +92,14 @@ def _plot_deviation(output_dir, prototype_results, tau_silence, tau_suspicious, 
 
 def _plot_decision_timeline(output_dir, prototype_results, adjacent_results, event_start, event_end) -> None:
     plt.figure(figsize=(10, 3.8))
-    rows = [("Prototype RDT-Gate", prototype_results, 1), ("Adjacent Baseline", adjacent_results, 0)]
+    if adjacent_results is None:
+        rows = [("Prototype RDT-Gate", prototype_results, 0)]
+        yticks = [0]
+        ylabels = ["Prototype RDT-Gate"]
+    else:
+        rows = [("Prototype RDT-Gate", prototype_results, 1), ("Adjacent Baseline", adjacent_results, 0)]
+        yticks = [0, 1]
+        ylabels = ["Adjacent Baseline", "Prototype RDT-Gate"]
     for label, results, y in rows:
         for result in results:
             decision = result.decision.value
@@ -100,7 +107,7 @@ def _plot_decision_timeline(output_dir, prototype_results, adjacent_results, eve
             plt.barh(y, width, left=result.start_time, height=0.35, color=SIGNAL_COLOR[decision])
     _event_span(event_start, event_end)
     handles = [plt.Rectangle((0, 0), 1, 1, color=color, label=signal) for signal, color in SIGNAL_COLOR.items()]
-    plt.yticks([0, 1], ["Adjacent Baseline", "Prototype RDT-Gate"])
+    plt.yticks(yticks, ylabels)
     plt.xlabel("Time (s)")
     plt.title("Decision Timeline")
     plt.legend(handles=handles, loc="upper right")
@@ -114,10 +121,13 @@ def _plot_signal_counts(output_dir, metrics) -> None:
     x = np.arange(len(labels))
     width = 0.36
     proto = [metrics["prototype"]["signal_counts"][label] for label in labels]
-    adj = [metrics["adjacent"]["signal_counts"][label] for label in labels]
     plt.figure(figsize=(8, 4))
-    plt.bar(x - width / 2, proto, width, label="Prototype RDT-Gate")
-    plt.bar(x + width / 2, adj, width, label="Adjacent Baseline")
+    if "adjacent" in metrics:
+        adj = [metrics["adjacent"]["signal_counts"][label] for label in labels]
+        plt.bar(x - width / 2, proto, width, label="Prototype RDT-Gate")
+        plt.bar(x + width / 2, adj, width, label="Adjacent Baseline")
+    else:
+        plt.bar(x, proto, width, label="Prototype RDT-Gate")
     plt.xticks(x, labels)
     plt.ylabel("Clip count")
     plt.title("Signal Counts")
@@ -132,10 +142,13 @@ def _plot_metrics(output_dir, metrics) -> None:
     x = np.arange(len(labels))
     width = 0.36
     proto = [metrics["prototype"][label] or 0.0 for label in labels]
-    adj = [metrics["adjacent"][label] or 0.0 for label in labels]
     plt.figure(figsize=(9, 4))
-    plt.bar(x - width / 2, proto, width, label="Prototype RDT-Gate")
-    plt.bar(x + width / 2, adj, width, label="Adjacent Baseline")
+    if "adjacent" in metrics:
+        adj = [metrics["adjacent"][label] or 0.0 for label in labels]
+        plt.bar(x - width / 2, proto, width, label="Prototype RDT-Gate")
+        plt.bar(x + width / 2, adj, width, label="Adjacent Baseline")
+    else:
+        plt.bar(x, proto, width, label="Prototype RDT-Gate")
     plt.xticks(x, labels, rotation=12)
     plt.ylim(0.0, 1.0)
     plt.ylabel("Rate")

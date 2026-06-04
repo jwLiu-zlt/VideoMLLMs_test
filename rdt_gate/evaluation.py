@@ -13,14 +13,16 @@ def signal_counts(results: Iterable[Any]) -> dict[str, int]:
 
 def compute_metrics(
     prototype_results,
-    adjacent_results,
+    adjacent_results=None,
     event_start: float | None = None,
     event_end: float | None = None,
 ) -> Dict[str, Dict[str, Any]]:
-    return {
+    metrics = {
         "prototype": _method_metrics(prototype_results, event_start, event_end),
-        "adjacent": _method_metrics(adjacent_results, event_start, event_end),
     }
+    if adjacent_results is not None:
+        metrics["adjacent"] = _method_metrics(adjacent_results, event_start, event_end)
+    return metrics
 
 
 def _method_metrics(results, event_start: float | None, event_end: float | None) -> Dict[str, Any]:
@@ -62,7 +64,7 @@ def make_report(
     event_end: float | None,
 ) -> str:
     lines = [
-        "# Fast-Slow RDT-Gate 对比实验报告",
+        "# Fast-Slow RDT-Gate 实验报告",
         "",
         "## 实验配置",
         "",
@@ -75,15 +77,21 @@ def make_report(
         "## 方法参数",
         "",
         f"- Prototype RDT-Gate: `{prototype_params}`",
-        f"- Adjacent Baseline: `{adjacent_params}`",
-        "",
-        "## 信号数量统计",
-        "",
-        "| 方法 | SILENCE | WAIT | SUSPICIOUS |",
-        "|---|---:|---:|---:|",
     ]
+    if adjacent_params.get("adjacent_enable"):
+        lines.append(f"- Adjacent Baseline: `{adjacent_params}`")
 
-    for name in ("prototype", "adjacent"):
+    lines.extend(
+        [
+            "",
+            "## 信号数量统计",
+            "",
+            "| 方法 | SILENCE | WAIT | SUSPICIOUS |",
+            "|---|---:|---:|---:|",
+        ]
+    )
+
+    for name in metrics:
         counts = metrics[name]["signal_counts"]
         lines.append(
             f"| {name} | {counts['SILENCE']} | {counts['WAIT']} | {counts['SUSPICIOUS']} |"
@@ -98,7 +106,7 @@ def make_report(
             "|---|---:|---:|---:|",
         ]
     )
-    for name in ("prototype", "adjacent"):
+    for name in metrics:
         row = metrics[name]
         lines.append(
             f"| {name} | {_fmt(row['false_suspicious_rate'])} | "
@@ -110,15 +118,15 @@ def make_report(
             "",
             "## 图表解释",
             "",
-            "- `change_scores.png`: 展示相邻 clip 的变化分数。普通动态阶段 change 仍可能波动较大，因此单独使用 change 容易误触发。",
+            "- `change_scores.png`: 展示相邻 clip 的变化分数，用于辅助观察动态变化强度。",
             "- `prototype_deviation.png`: 展示当前 clip 偏离 routine prototype 的程度。如果 routine 阶段 deviation 较低、事件阶段升高，说明原型捕捉了常规动态模式。",
-            "- `decision_timeline.png`: 展示两种方法在时间轴上的 SILENCE/WAIT/SUSPICIOUS 输出差异。",
-            "- `signal_counts.png`: 对比两种方法输出的信号数量，重点观察 SILENCE 与 SUSPICIOUS 的比例。",
-            "- `metrics_comparison.png`: 在提供事件标注时，对比误触发率、事件触发率和 Slow Path 触发率。",
+            "- `decision_timeline.png`: 展示 Prototype RDT-Gate 在时间轴上的 SILENCE/WAIT/SUSPICIOUS 输出。",
+            "- `signal_counts.png`: 展示 Prototype RDT-Gate 输出的信号数量。",
+            "- `metrics_comparison.png`: 在提供事件标注时，展示误触发率、事件触发率和 Slow Path 触发率。",
             "",
             "## 结论",
             "",
-            "在该视频中，Adjacent Similarity Baseline 仅依赖相邻 clip 的变化程度，因此在高动态但语义上仍属于常规模式的阶段容易输出更多 SUSPICIOUS 信号。Prototype-based RDT-Gate 通过维护常规动态原型，能够识别当前 clip 是否仍接近稳定的 routine pattern，因此在普通动态阶段输出更多 SILENCE 信号。",
+            "Prototype-based RDT-Gate 通过维护常规动态原型，识别当前 clip 是否仍接近稳定的 routine pattern。",
             "",
             "如果在事件区间内 Prototype-based RDT-Gate 的 deviation 明显升高并输出 SUSPICIOUS，说明原型方法不仅能够抑制普通动态误触发，也能对偏离常规动态的关键变化保持敏感。",
         ]

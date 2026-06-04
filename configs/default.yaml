@@ -1,0 +1,56 @@
+data:
+  video_path: data/1.mp4
+  output_dir: null
+  clip_seconds: 0.5
+  frames_per_clip: 8
+  embedding_backend: simple
+  use_synthetic_demo: false
+
+prototype:
+  warmup_clips: 2
+  alpha: 0.9
+  tau_silence: null
+  tau_suspicious: null
+  tau_change_low: null
+  tau_change_high: null
+  init_var_threshold: 0.10
+  init_change_threshold: 0.10
+  max_wait: 2
+  change_weight: 1.0
+  update_threshold_ratio: 0.7
+
+adaptive:
+  adaptive_window_size: 32
+  adaptive_alpha_high: 3.0
+  adaptive_min_thr: 0.02
+  adaptive_max_thr: 0.25
+  adaptive_warmup: 4
+  adaptive_min_interval: 3
+  adaptive_confirm_hits: 2
+
+adjacent:
+  adjacent_enable: false
+  adj_tau_silence: 0.01
+  adj_tau_suspicious: 0.013
+
+event:
+  event_start: null
+  event_end: null
+  event_config: event_annotations.json
+
+everos:
+  everos_enable: false
+  everos_user_id: damo_0526_user
+  everos_session_id: null
+  everos_search: null
+  everos_top_k: 5
+  everos_no_flush: false
+
+llm:
+  enable: false
+  backend: mock
+  model_path: null
+  device: auto
+  max_new_tokens: 128
+  trigger_mode: suspicious
+  prompt_template: "你是一个流式视频理解助手。视频: {video_label}\n当前 clip={clip_id}, 时间={start_time}-{end_time}s。\nGate decision={decision}, change={change}, deviation={deviation}, offset={offset}, threshold={threshold}。\n请根据这些 gate 信号判断是否值得响应，并用一句话说明原因。"
